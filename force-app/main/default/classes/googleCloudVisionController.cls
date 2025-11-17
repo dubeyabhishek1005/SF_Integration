@@ -38,16 +38,17 @@ public with sharing class googleCloudVisionController {
                 // JSON.deserializeUntyped method will return a map of string and object
                 // we can then use the map to get the data we need
 
-                Map<String, Object> data = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
-                List<Object> responseData = (List<Object>)data.get('responses');
-                Map<String, Object> labelAnnotationsData = (Map<String, Object>)responseData[0];
-                List<Object> labelAnnotations = (List<Object>)labelAnnotationsData.get('labelAnnotations');
-            
-                for (Object obj : labelAnnotations) {
-                    Map<String, Object> showData = (Map<String, Object>) obj;
-                    String des = (String) showData.get('description');
-                    Decimal scr = (Decimal) showData.get('score');
-                    System.debug('Description: ' + des + ' Score: ' + scr);
+                Map<String, Object> responseMap = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
+                List<Object> firstResponseList = (List<Object>)responseMap.get('responses');
+                Map<String, Object> firstResponseMap = (Map<String, Object>)firstResponseList[0];
+                List<Object> labelAnnotationsList = (List<Object>)firstResponseMap.get('labelAnnotations');
+
+                for(Object annotations: labelAnnotationsList){
+                    Map<String, Object> annotationMap = (Map<String, Object>)annotations;
+                    String description = (String)annotationMap.get('description');
+                    Decimal score = (Decimal)annotationMap.get('score');
+                    Decimal topicality = (Decimal)annotationMap.get('topicality');
+                    System.debug('Description: ' + description + ' Score: ' + score + ' Topicality: ' + topicality);
                 }
                 return res.getBody();
             }
