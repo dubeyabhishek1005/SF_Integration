@@ -3,13 +3,17 @@ import getCloudVisionResponse from '@salesforce/apex/googleCloudVisionController
 
 export default class GetCloudVision extends LightningElement {
 
+    data = [];
+    
     handleCloudVisionResponse(){
         getCloudVisionResponse()
-        .then( (data) => {
-            console.log('Success -- ', data);
+        .then( (response) => {
+            this.data = response;
+            console.log('SUCESS',response);
         })
         .catch( (error) => {
-            console.log('Failed -- ', error);
+            this.data = error;
+            console.log('ERROR',error);
         });
     }
 }

@@ -15,7 +15,7 @@ public with sharing class googleCloudVisionController {
     */
 
     @AuraEnabled(cacheable = true) 
-    public static string getCloudVisionResponse(){
+    public static List<CloudVisionResponseWrapper> getCloudVisionResponse(){
         try {
 
             HTTP http = new HTTP();
@@ -38,25 +38,51 @@ public with sharing class googleCloudVisionController {
                 // JSON.deserializeUntyped method will return a map of string and object
                 // we can then use the map to get the data we need
 
+                
                 Map<String, Object> responseMap = (Map<String, Object>)JSON.deserializeUntyped(res.getBody());
                 List<Object> firstResponseList = (List<Object>)responseMap.get('responses');
                 Map<String, Object> firstResponseMap = (Map<String, Object>)firstResponseList[0];
                 List<Object> labelAnnotationsList = (List<Object>)firstResponseMap.get('labelAnnotations');
 
+                // Now, what if you want to show the data in LWC, and you need to store all the values of Description, score & topicality in a list of maps?
+                // for that we'll create a warpper class
+                List<CloudVisionResponseWrapper> CloudVisionResponseWrapperList = new List<CloudVisionResponseWrapper>();
+
                 for(Object annotations: labelAnnotationsList){
+
                     Map<String, Object> annotationMap = (Map<String, Object>)annotations;
+                    CloudVisionResponseWrapper cloudVisionResponseWrapper = new CloudVisionResponseWrapper();
+                    cloudVisionResponseWrapper.description = (String)annotationMap.get('description');
+                    cloudVisionResponseWrapper.score = (Decimal)annotationMap.get('score');
+                    cloudVisionResponseWrapper.topicality = (Decimal)annotationMap.get('topicality');
+                    CloudVisionResponseWrapperList.add(cloudVisionResponseWrapper);
+                    /*
                     String description = (String)annotationMap.get('description');
                     Decimal score = (Decimal)annotationMap.get('score');
                     Decimal topicality = (Decimal)annotationMap.get('topicality');
                     System.debug('Description: ' + description + ' Score: ' + score + ' Topicality: ' + topicality);
+                    */
                 }
-                return res.getBody();
+                //return res.getBody();
+                System.debug('CloudVisionResponseWrapperList -- '+ CloudVisionResponseWrapperList);
+                return CloudVisionResponseWrapperList;
             }
-            return 'Something went wrong' + res.getBody();
+            return null;
 
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    }
+
+    public class CloudVisionResponseWrapper {
+        @AuraEnabled
+        public String description {get; set;}
+
+        @AuraEnabled
+        public Decimal score {get; set;}
+
+        @AuraEnabled
+        public Decimal topicality {get; set;}   
     }
     
 }

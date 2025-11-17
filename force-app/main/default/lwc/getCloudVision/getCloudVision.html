@@ -1,3 +1,13 @@
 <template>
     <button label='Get Cloud Vision Response' onclick={handleCloudVisionResponse}>Get Cloud Vision Response</button>
+    <template if:true={data}>
+        <template for:each={data} for:item='item'>
+            <div key={item.description}>
+                <p>Description: {item.description}</p>
+                <p>Score: {item.score}</p>
+                <p>Topicality: {item.topicality}</p>
+                <br>
+            </div>
+        </template>
+    </template>
 </template>
