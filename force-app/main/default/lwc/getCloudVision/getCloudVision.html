@@ -10,4 +10,15 @@
             </div>
         </template>
     </template>
+    <button label='Get Cloud Vision Response JSON' onclick={handleCloudVisionResponseJSON}>Get Cloud Vision Response JSON</button>
+    <template if:true={dataJSON}>
+        <template for:each={dataJSON} for:item='item'>
+            <div key={item.description}>
+                <p>Description: {item.description}</p>
+                <p>Score: {item.score}</p>
+                <p>Topicality: {item.topicality}</p>
+                <br>
+            </div>
+        </template>
+    </template>
 </template>

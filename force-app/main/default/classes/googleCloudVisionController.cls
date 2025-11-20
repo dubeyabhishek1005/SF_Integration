@@ -14,6 +14,7 @@ public with sharing class googleCloudVisionController {
         3. Create Credential & Create API Key
     */
 
+    
     @AuraEnabled(cacheable = true) 
     public static List<CloudVisionResponseWrapper> getCloudVisionResponse(){
         try {
@@ -72,18 +73,87 @@ public with sharing class googleCloudVisionController {
         } catch (Exception e) {
             throw new AuraHandledException(e.getMessage());
         }
+    } 
+
+    @AuraEnabled(Cacheable = true)
+    public static List<CloudVisionResponseWrapper> getCloudVisionResponseJSON(){
+        try{
+            HTTP http = new HTTP();
+
+            HttpRequest req = new HttpRequest();
+            req.setEndpoint(cloudVisionAPIEndpoint);
+            req.setEndpoint(cloudVisionAPIEndpoint);
+            req.setMethod('POST');
+            req.setBody('{ "requests": [ { "features": [ { "maxResults": 5, "type": "LABEL_DETECTION" } ], "image": { "source": { "imageUri": "gs://cloud-samples-data/vision/label/setagaya.jpeg" } } } ] }');
+            req.setHeader('Content-Type', 'application/json');
+
+            HttpResponse res = new HttpResponse();
+            res = http.send(req);
+
+            if(res.getStatusCode() == 200){
+                List<CloudVisionResponseWrapper> CloudVisionResponseWrapperList = new List<CloudVisionResponseWrapper>();
+                /*
+                JSON.deserialize is an alternate way to parse the JSON data.
+                To use this, multiple classes needs to be created, and to know what are the classes.
+                use a website json2Apex Engine and put ur json data and they will create classes.
+                Make sure to create all different classes, no need to nest it.
+                */
+
+                JsonParser imageInfo = (JsonParser)JSON.deserialize(res.getBody(), JsonParser.class);
+                List<responses> response = imageInfo.responses;
+                List<labelAnnotations> labelAnnotation = response[0].labelAnnotations;
+
+                for (labelAnnotations annotation : labelAnnotation){
+                    CloudVisionResponseWrapper CloudVisionResponse = new CloudVisionResponseWrapper();
+                    String description = annotation.description;
+                    Decimal score = annotation.score;
+                    Decimal topicality = annotation.topicality;
+                    System.debug('Description: ' + description + ' Score: ' + score + ' Topicality: ' + topicality);
+
+                    CloudVisionResponse.description = description;
+                    CloudVisionResponse.score = score;
+                    CloudVisionResponse.topicality = topicality;
+                    CloudVisionResponseWrapperList.add(CloudVisionResponse);
+                }
+                return CloudVisionResponseWrapperList;
+            }
+            return null;
+            
+        } catch (Exception e){
+            throw new AuraHandledException(e.getMessage());          
+        }
     }
 
     public class CloudVisionResponseWrapper {
         @AuraEnabled
         public String description {get; set;}
-
         @AuraEnabled
         public Decimal score {get; set;}
-
         @AuraEnabled
         public Decimal topicality {get; set;}   
     }
+    // Below are the 3 classes based on the JSON data provided.
+
+    public class JsonParser{
+        @AuraEnabled
+		public list<responses> responses{get; set;}
+	}
+
+    public class responses{
+        @AuraEnabled
+		public list<labelAnnotations> labelAnnotations{get; set;}
+    }
+
+	public class labelAnnotations{
+        @AuraEnabled
+		public Decimal topicality{get; set;}
+        @AuraEnabled
+		public Decimal score{get; set;}
+        @AuraEnabled
+		public String description{get; set;}
+        @AuraEnabled
+		public String mid{get; set;}
+	}
     
 }
 
